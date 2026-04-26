@@ -1,0 +1,15 @@
+tensorflow==2.16.2
+mediapipe==0.10.14
+protobuf==4.25.9
+opencv-python
+numpy
+flask
+flask-socketio
+flask-cors
+eventlet
+pyaudio
+SpeechRecognition
+transformers
+torch
+sentencepiece
+requests
