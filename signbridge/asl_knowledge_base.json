@@ -1,0 +1,290 @@
+[
+  {
+    "sign": "Hello",
+    "type": "gesture",
+    "description": "Open hand, fingers together, palm facing outward. Bring hand up to forehead then sweep outward away from forehead in a salute-like motion. Used as a standard greeting in ASL.",
+    "handshape": "B-hand (flat open hand)",
+    "movement": "Outward arc from forehead",
+    "location": "Forehead",
+    "source": "ASL University (Lifeprint.com) - Dr. Bill Vicars"
+  },
+  {
+    "sign": "Thanks",
+    "type": "gesture",
+    "description": "Flat hand, fingers together, palm facing up. Touch fingertips to chin then move hand forward and slightly down away from face. Similar to blowing a kiss outward.",
+    "handshape": "Flat B-hand",
+    "movement": "Forward and down from chin",
+    "location": "Chin/mouth area",
+    "source": "ASL University (Lifeprint.com) - Dr. Bill Vicars"
+  },
+  {
+    "sign": "Yes",
+    "type": "gesture",
+    "description": "Hand in S-handshape (closed fist). Nod the fist up and down at the wrist, mimicking a head nod. Performed at approximately shoulder height.",
+    "handshape": "S-hand (closed fist)",
+    "movement": "Repeated up-down nodding motion at wrist",
+    "location": "Neutral space, shoulder height",
+    "source": "ASL University (Lifeprint.com) - Dr. Bill Vicars"
+  },
+  {
+    "sign": "No",
+    "type": "gesture",
+    "description": "Extend index and middle fingers (or index finger and thumb). Snap them together twice in a quick pinching motion, like a mouth saying no.",
+    "handshape": "H-hand or index+middle extended",
+    "movement": "Snap/pinch closed twice",
+    "location": "Neutral space",
+    "source": "ASL University (Lifeprint.com) - Dr. Bill Vicars"
+  },
+  {
+    "sign": "Sorry",
+    "type": "gesture",
+    "description": "Hand in A-handshape (closed fist with thumb alongside). Make circular rubbing motion on the chest area in a clockwise direction. Represents rubbing your heart.",
+    "handshape": "A-hand (closed fist)",
+    "movement": "Circular clockwise motion on chest",
+    "location": "Chest/heart area",
+    "source": "ASL University (Lifeprint.com) - Dr. Bill Vicars"
+  },
+  {
+    "sign": "I LOVE YOU",
+    "type": "gesture",
+    "description": "Extend thumb, index finger, and pinky simultaneously while keeping ring and middle fingers folded down. Hold the hand up facing outward. This is a combination of I, L, and Y handshapes merged into one iconic sign.",
+    "handshape": "ILY handshape - thumb + index + pinky extended",
+    "movement": "Static hold, sometimes slight shake",
+    "location": "Neutral space in front of body",
+    "source": "ASL University (Lifeprint.com) - Dr. Bill Vicars"
+  },
+  {
+    "sign": "A",
+    "type": "letter",
+    "description": "Closed fist with thumb resting alongside the index finger on the side. The thumb is visible and not tucked under. This is the ASL fingerspelling letter A.",
+    "handshape": "Fist with thumb on side (A-hand)",
+    "movement": "Static hold",
+    "location": "Neutral signing space",
+    "source": "Gallaudet University ASL Connect - Standard Fingerspelling Chart"
+  },
+  {
+    "sign": "B",
+    "type": "letter",
+    "description": "Four fingers straight up and together, thumb tucked across palm. The hand is flat and vertical like a stop sign but with the thumb folded in.",
+    "handshape": "Four fingers together, thumb tucked",
+    "movement": "Static hold",
+    "location": "Neutral signing space",
+    "source": "Gallaudet University ASL Connect - Standard Fingerspelling Chart"
+  },
+  {
+    "sign": "C",
+    "type": "letter",
+    "description": "Fingers and thumb curved to form a C-shape, like holding a cylinder. All fingers together, curved with thumb below forming an open circle shape.",
+    "handshape": "Curved C-shape, all fingers together",
+    "movement": "Static hold",
+    "location": "Neutral signing space",
+    "source": "Gallaudet University ASL Connect - Standard Fingerspelling Chart"
+  },
+  {
+    "sign": "D",
+    "type": "letter",
+    "description": "Index finger points straight up, middle, ring, and pinky fingers curve to touch the thumb, forming a circular shape with a vertical index finger.",
+    "handshape": "Index up, other fingers and thumb form circle",
+    "movement": "Static hold",
+    "location": "Neutral signing space",
+    "source": "Gallaudet University ASL Connect - Standard Fingerspelling Chart"
+  },
+  {
+    "sign": "E",
+    "type": "letter",
+    "description": "All four fingers curl down at the second joint, like a bent claw. Thumb tucks under the bent fingers. Resembles a closed claw or bent-finger shape.",
+    "handshape": "Fingers bent/curled, thumb tucked under",
+    "movement": "Static hold",
+    "location": "Neutral signing space",
+    "source": "Gallaudet University ASL Connect - Standard Fingerspelling Chart"
+  },
+  {
+    "sign": "F",
+    "type": "letter",
+    "description": "Index finger and thumb touch at the tips forming a circle. Middle, ring, and pinky fingers extend straight up. Circle formed by index and thumb with three fingers up.",
+    "handshape": "Index-thumb circle, three fingers extended",
+    "movement": "Static hold",
+    "location": "Neutral signing space",
+    "source": "Gallaudet University ASL Connect - Standard Fingerspelling Chart"
+  },
+  {
+    "sign": "G",
+    "type": "letter",
+    "description": "Index finger and thumb extend pointing horizontally to the side, parallel to the ground. Other fingers folded. Like pointing sideways with index finger and thumb extended.",
+    "handshape": "Index and thumb horizontal, others folded",
+    "movement": "Static hold",
+    "location": "Neutral signing space",
+    "source": "Gallaudet University ASL Connect - Standard Fingerspelling Chart"
+  },
+  {
+    "sign": "H",
+    "type": "letter",
+    "description": "Index and middle fingers extend together horizontally pointing to the side. Ring and pinky fingers and thumb folded in. Two fingers pointing sideways parallel to ground.",
+    "handshape": "Index and middle together, horizontal",
+    "movement": "Static hold",
+    "location": "Neutral signing space",
+    "source": "Gallaudet University ASL Connect - Standard Fingerspelling Chart"
+  },
+  {
+    "sign": "I",
+    "type": "letter",
+    "description": "Pinky finger extended straight up, all other fingers and thumb closed in a fist. Only the pinky is up.",
+    "handshape": "Pinky only extended",
+    "movement": "Static hold",
+    "location": "Neutral signing space",
+    "source": "Gallaudet University ASL Connect - Standard Fingerspelling Chart"
+  },
+  {
+    "sign": "J",
+    "type": "letter",
+    "description": "Start with pinky extended (I-hand), then trace a J-shape in the air — move down then curve upward and to the right. This is a MOTION sign unlike all other alphabet letters.",
+    "handshape": "Pinky extended (I-hand)",
+    "movement": "Traces J-shape in air, down then curved up",
+    "location": "Neutral signing space",
+    "source": "Gallaudet University ASL Connect - Standard Fingerspelling Chart"
+  },
+  {
+    "sign": "K",
+    "type": "letter",
+    "description": "Index finger points up, middle finger angled outward and forward, thumb between index and middle fingers pointing forward. Like a peace sign but with thumb between the fingers.",
+    "handshape": "Index up, middle angled, thumb between",
+    "movement": "Static hold",
+    "location": "Neutral signing space",
+    "source": "Gallaudet University ASL Connect - Standard Fingerspelling Chart"
+  },
+  {
+    "sign": "L",
+    "type": "letter",
+    "description": "Index finger points straight up, thumb extends horizontally to the side forming an L-shape. Other fingers folded down. Classic L-shape with index and thumb.",
+    "handshape": "L-shape: index up, thumb out",
+    "movement": "Static hold",
+    "location": "Neutral signing space",
+    "source": "Gallaudet University ASL Connect - Standard Fingerspelling Chart"
+  },
+  {
+    "sign": "M",
+    "type": "letter",
+    "description": "Three fingers (index, middle, ring) folded down over the tucked thumb. Pinky also folded. The thumb is tucked under three bent fingers.",
+    "handshape": "Three fingers over tucked thumb",
+    "movement": "Static hold",
+    "location": "Neutral signing space",
+    "source": "Gallaudet University ASL Connect - Standard Fingerspelling Chart"
+  },
+  {
+    "sign": "N",
+    "type": "letter",
+    "description": "Two fingers (index, middle) folded down over the tucked thumb. Ring and pinky folded. The thumb is tucked under two bent fingers.",
+    "handshape": "Two fingers over tucked thumb",
+    "movement": "Static hold",
+    "location": "Neutral signing space",
+    "source": "Gallaudet University ASL Connect - Standard Fingerspelling Chart"
+  },
+  {
+    "sign": "O",
+    "type": "letter",
+    "description": "All fingers and thumb curve to meet each other at the tips, forming a circle or O-shape. Like holding a small ball with all fingertips touching the thumb.",
+    "handshape": "All fingertips and thumb meet forming O",
+    "movement": "Static hold",
+    "location": "Neutral signing space",
+    "source": "Gallaudet University ASL Connect - Standard Fingerspelling Chart"
+  },
+  {
+    "sign": "P",
+    "type": "letter",
+    "description": "Like K-handshape but rotated so the hand points downward. Index finger pointing down, middle finger angled, thumb between index and middle. A downward-pointing K.",
+    "handshape": "K-hand rotated downward",
+    "movement": "Static hold",
+    "location": "Neutral signing space",
+    "source": "Gallaudet University ASL Connect - Standard Fingerspelling Chart"
+  },
+  {
+    "sign": "Q",
+    "type": "letter",
+    "description": "Like G-handshape but rotated downward. Index finger and thumb pointing down. Other fingers folded. A downward-pointing G.",
+    "handshape": "G-hand rotated downward, pointing down",
+    "movement": "Static hold",
+    "location": "Neutral signing space",
+    "source": "Gallaudet University ASL Connect - Standard Fingerspelling Chart"
+  },
+  {
+    "sign": "R",
+    "type": "letter",
+    "description": "Index and middle fingers extended and crossed over each other. Ring and pinky folded down, thumb tucked. The two extended fingers are intertwined/crossed.",
+    "handshape": "Index and middle crossed",
+    "movement": "Static hold",
+    "location": "Neutral signing space",
+    "source": "Gallaudet University ASL Connect - Standard Fingerspelling Chart"
+  },
+  {
+    "sign": "S",
+    "type": "letter",
+    "description": "All fingers curled into a fist with the thumb wrapped in front across the fingers. Thumb covers the front of the curled fingers. Tight fist with thumb in front.",
+    "handshape": "Fist with thumb across front",
+    "movement": "Static hold",
+    "location": "Neutral signing space",
+    "source": "Gallaudet University ASL Connect - Standard Fingerspelling Chart"
+  },
+  {
+    "sign": "T",
+    "type": "letter",
+    "description": "Index finger folds down with thumb tucked between index and middle fingers from underneath. Thumb tip visible between the two fingers.",
+    "handshape": "Thumb between index and middle",
+    "movement": "Static hold",
+    "location": "Neutral signing space",
+    "source": "Gallaudet University ASL Connect - Standard Fingerspelling Chart"
+  },
+  {
+    "sign": "U",
+    "type": "letter",
+    "description": "Index and middle fingers extended straight up together, held close and parallel. Ring, pinky, and thumb folded. Two fingers up together pointing upward.",
+    "handshape": "Index and middle together, pointing up",
+    "movement": "Static hold",
+    "location": "Neutral signing space",
+    "source": "Gallaudet University ASL Connect - Standard Fingerspelling Chart"
+  },
+  {
+    "sign": "V",
+    "type": "letter",
+    "description": "Index and middle fingers extended and spread apart forming a V-shape or peace sign. Ring, pinky, and thumb folded. Classic V for victory or peace sign.",
+    "handshape": "Index and middle spread apart (V-shape)",
+    "movement": "Static hold",
+    "location": "Neutral signing space",
+    "source": "Gallaudet University ASL Connect - Standard Fingerspelling Chart"
+  },
+  {
+    "sign": "W",
+    "type": "letter",
+    "description": "Index, middle, and ring fingers extended and spread apart forming a W-shape. Pinky and thumb folded. Three fingers spread like a W or a three-pronged shape.",
+    "handshape": "Three fingers spread (W-shape)",
+    "movement": "Static hold",
+    "location": "Neutral signing space",
+    "source": "Gallaudet University ASL Connect - Standard Fingerspelling Chart"
+  },
+  {
+    "sign": "X",
+    "type": "letter",
+    "description": "Index finger extended and bent or hooked at the first joint like a hook. Other fingers and thumb folded. A bent/hooked index finger.",
+    "handshape": "Hooked/bent index finger",
+    "movement": "Static hold",
+    "location": "Neutral signing space",
+    "source": "Gallaudet University ASL Connect - Standard Fingerspelling Chart"
+  },
+  {
+    "sign": "Y",
+    "type": "letter",
+    "description": "Thumb and pinky extended outward, middle fingers folded down. Like a Y-shape or a shaka/hang-loose gesture. Thumb out, pinky out, three middle fingers folded.",
+    "handshape": "Thumb and pinky extended (Y-shape)",
+    "movement": "Static hold",
+    "location": "Neutral signing space",
+    "source": "Gallaudet University ASL Connect - Standard Fingerspelling Chart"
+  },
+  {
+    "sign": "Z",
+    "type": "letter",
+    "description": "Index finger extended, traces a Z-shape in the air. Move right, then diagonally down-left, then right again. This is a motion sign like J.",
+    "handshape": "Index finger extended (D-hand or 1-hand)",
+    "movement": "Traces Z-shape in air",
+    "location": "Neutral signing space",
+    "source": "Gallaudet University ASL Connect - Standard Fingerspelling Chart"
+  }
+]

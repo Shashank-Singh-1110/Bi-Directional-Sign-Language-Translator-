@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+env/
+venv/
+*.egg-info/
+
+# Model — too large for git, use Releases
+models/action_norm.h5
+*.h5
+*.pkl
+# Keep only the deployed model
+models/tflite/*.tflite
+!models/tflite/action_native_fp16.tflite
+# Datasets — too large for git
+# Datasets — too large for git
+/data/
+training_reports/
+DATASET_NORM.zip
+
+# Logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets
+.env
+*.key
+
+android_fixtures.json

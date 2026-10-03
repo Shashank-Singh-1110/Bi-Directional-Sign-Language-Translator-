@@ -1,0 +1,12 @@
+SignBridge — TFLite Conversion Benchmark
+Source model: action_norm.h5
+Parameters:   187,264
+TensorFlow:   2.16.2
+Eval samples: 96
+
+Variant             Size (KB)    Latency   Accuracy   Agreement
+--------------------------------------------------------------------
+Keras (.h5)              2241      13.3ms    100.00%      100.0%
+TFLite float32            750       0.6ms    100.00%      100.0%
+TFLite float16            386       0.6ms    100.00%      100.0%
+TFLite int8               209       0.7ms     97.92%       97.9%
