@@ -1,201 +1,232 @@
-# 🤟 SignBridge — Real-Time Bidirectional ASL Translator
+# SignBridge
 
-> A real-time, two-way American Sign Language translator that runs entirely on a laptop CPU — no GPU, no special hardware, just a webcam and a browser.
+A real-time, two-way American Sign Language translator that runs entirely on a
+laptop CPU — no GPU, no cloud services, no special hardware. Just a webcam, a
+microphone and a browser.
+
+Signs are recognised from the webcam and spoken aloud; speech is transcribed
+locally and played back as sign animations. Both directions work offline.
 
 ---
 
 ## What it does
 
-| Direction | How |
-|-----------|-----|
-| ✋ Sign → Speech | Webcam detects ASL signs → LSTM model → T5 NLP → spoken English |
-| 🎤 Speech → Sign | Speak or type → Google STT → ASL GIF animations |
-| 🌐 Live Network | Two browsers, one WiFi → real-time peer translation via Socket.IO rooms |
-| 🔍 Verification | Every detected sign verified against ASL University sources via Llama3 RAG |
+**Sign → Speech.** MediaPipe tracks the hands, an LSTM classifies 30-frame
+windows into one of 32 signs, a T5 model assembles the recognised signs into a
+sentence, and the sentence is spoken.
+
+**Speech → Sign.** Whisper transcribes microphone audio on-device, and the
+words are rendered as sign animations.
+
+**Live rooms.** Two people on the same network can join a room code and
+translate to each other in real time — one signing, one speaking.
+
+**Sign verification.** Every detection is checked against a knowledge base of
+ASL descriptions, with a local LLM confirming the handshape, movement and
+location match what the sign should look like. This exists so a detection can
+be shown to be a real ASL sign rather than just a confident model output.
+
+### Vocabulary
+
+32 classes: `Hello`, `Thanks`, `Yes`, `I LOVE YOU`, `No`, `Sorry`, and the
+letters `A`–`Z`.
 
 ---
 
-## Demo
+## Why it works at a distance
+
+The core problem with landmark-based sign recognition is that the same sign
+produces completely different coordinates depending on how far the signer
+stands from the camera. A model trained at one distance degrades badly at
+another.
+
+SignBridge normalizes every hand before it reaches the model:
+
+1. Translate so the wrist (landmark 0) sits at the origin
+2. Divide by the largest distance from the wrist to any landmark
+
+What survives is hand *shape*, independent of position and scale. The same
+sign at 30 cm, 60 cm and 100 cm yields vectors with cosine similarity above
+0.99.
+
+This also cuts the input from MediaPipe Holistic's 1,662 features to 126 —
+two hands, 21 landmarks each, three coordinates — by dropping the pose and
+face blocks, which carried no signal the hands did not already provide.
+
+The transform lives in one place (`signbridge/`) so the training pipeline, the
+web backend and the Android port cannot drift apart.
+
+---
+
+## How a prediction is made
+
+A detection has to clear four gates before it is accepted:
+
+| Gate | Condition |
+|---|---|
+| Hand presence | At least one hand detected |
+| Motion | Landmark standard deviation over 6 frames below 0.012 — the hand has settled |
+| Confidence | 75% for gestures, 92% for letters |
+| Confidence gap | Top prediction at least 25 points clear of the runner-up |
+
+Past those, a 10-frame stability buffer requires the same sign repeatedly, and
+a 3-second cooldown prevents one held sign from firing twice.
+
+Visually similar pairs get an additional check. Signs like V/Z, O/E and V/W
+differ by only a few degrees of finger angle, so a cosine-angle discriminator
+separates them where softmax confidence alone would not.
+
+### Model
+
+A 2-layer LSTM (128 → 64) with two dense layers, 187,264 parameters, trained
+on 960 sequences of 30 frames. Test accuracy is 98.96%.
+
+LSTM rather than a Transformer because the sequences are short and fixed at 30
+frames, the dataset is small enough that attention would overfit, and
+inference has to stay inside a video frame budget on a CPU.
+
+---
+
+## Running it
+
+### Requirements
+
+- Python 3.11 or 3.12
+- A webcam and a microphone
+- [Ollama](https://ollama.com) with `llama3` pulled, for sign verification
+  (optional — the system falls back to knowledge-base-only verification)
+
+### Setup
 
 ```bash
-# 1. Clone
-git clone https://github.com/YOUR_USERNAME/signbridge-asl-translator.git
-cd signbridge-asl-translator
+git clone https://github.com/Shashank-Singh-1110/Bi-Directional-Sign-Language-Translator-.git
+cd Bi-Directional-Sign-Language-Translator-
 
-# 2. Create virtual environment
-python3.12 -m venv .venv
-source .venv/bin/activate       # Mac/Linux
-.venv\Scripts\activate          # Windows
+python -m venv .venv
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
 
-# 3. Install dependencies
 pip install -r requirements.txt
+```
 
-# 4. Run
+### Model weights
+
+The TFLite model (`models/tflite/action_native_fp16.tflite`) is included and
+is all the web app needs.
+
+The Keras model (`models/action_norm.h5`) is not in the repository — it is
+attached to the latest [Release](../../releases). Download it into `models/`
+if you want to retrain, convert, or run the training scripts.
+
+### Start
+
+```bash
 python app.py
-
-# 5. Open browser
-open http://localhost:5001
 ```
 
-For the live network demo — get your IP and share it with a peer:
-```bash
-ipconfig getifaddr en0          # Mac
-hostname -I                     # Linux
-```
-Peer opens `http://YOUR_IP:5001` — no setup needed on their machine.
+Open <http://localhost:5001>.
 
----
+On first run Whisper downloads its `small.en` weights (~500 MB), which takes
+a couple of minutes. Subsequent starts load in about 4 seconds.
 
-## Project Structure
+### Live rooms
 
-```
-signbridge-asl-translator/
-├── app.py                    # Flask-SocketIO backend — main server
-├── index.html                # SignBridge web UI — 4 tabs
-├── Translator.py             # Standalone sign detection (OpenCV window)
-├── gloss_t5.py               # T5-small gloss → English conversion
-├── Speech_TO_Sign.py         # Push-to-talk speech → ASL GIFs
-├── live_translator.py        # TCP peer-to-peer live translation
-├── angle_discriminator.py    # Cosine angle profiles for similar signs
-├── asl_rag.py                # Llama3 RAG sign verification
-├── asl_knowledge_base.json   # 32-sign ASL reference (ASL Univ + Gallaudet)
-├── data_collection.py        # Training data recording script
-├── normalize_and_retrain.py  # Normalization + multi-run LSTM training
-├── signs_gifs/               # ASL GIF library
-│   ├── letters/              # A.gif — Z.gif
-│   └── words/                # hello.gif, thanks.gif, etc.
-└── docs/
-    ├── ARCHITECTURE.md       # Full system design
-    ├── NORMALIZATION.md      # Domain gap solution explained
-    └── DEMO_GUIDE.md         # Step-by-step demo instructions
-```
-
----
-
-## System Architecture
-
-```
-SIGN TO SPEECH
-Webcam → MediaPipe Holistic → Wrist-Origin Normalization (126-dim)
-       → LSTM (32 classes) → 4 Gates → Stability Buffer
-       → T5 Gloss → TTS
-
-SPEECH TO SIGN
-Mic (push-to-talk) → PyAudio → Google STT
-                   → GIF Lookup → ASL GIF Display / Fingerspelling
-
-WEB LAYER
-Flask-SocketIO → SignBridge UI (index.html)
-              → Live Network Rooms (Socket.IO)
-              → Llama3 RAG Verification (async)
-```
-
----
-
-## Key Technical Contributions
-
-**1. Wrist-Origin Normalization**  
-Reduces MediaPipe's 1,662-dim output to 126-dim hand-only features, then normalizes to wrist-origin with scale invariance. Solves the domain gap — same hand shape produces identical features at any camera distance.
-
-**2. Four-Gate Inference Pipeline**  
-Hand presence → Motion gate → Confidence threshold → Confidence gap → 10-frame stability buffer → 3-second cooldown. Near-zero false positives in real-world conditions.
-
-**3. T5 Gloss Module**  
-Converts fingerspelled letter sequences into grammatical English via letter grouping → rule fast path → T5-small beam search.
-
-**4. Networked Live Translation**  
-Two browsers on the same network join a Socket.IO room. Signs detected on one machine are forwarded as sentences to the peer's screen and spoken via TTS. First such networked ASL system in published literature.
-
-**5. LLM Sign Verification (RAG)**  
-Llama3 running locally via Ollama verifies every detected sign against ASL University and Gallaudet reference descriptions. Runs asynchronously — never blocks the camera loop.
-
----
-
-## Hardware & Dependencies
-
-- **Tested on:** MacBook Air M1/M5, Python 3.12
-- **No GPU required** — all inference runs on CPU
-
-### Core dependencies
-```
-tensorflow==2.16.2
-mediapipe==0.10.14
-protobuf==4.25.9
-flask
-flask-socketio
-flask-cors
-eventlet
-opencv-python
-pyaudio
-SpeechRecognition
-transformers
-torch
-```
-
-### For LLM verification (optional)
-```bash
-# Install Ollama
-brew install ollama          # Mac
-# Pull Llama3
-ollama pull llama3
-# Run before starting app.py
-ollama run llama3
-```
-
----
-
-## Apple Silicon (M1/M2/M3/M4/M5) Setup Notes
+Both devices must be on the same network. Find your IP:
 
 ```bash
-# Install native FLAC (required for SpeechRecognition)
-brew install flac
+ipconfig getifaddr en0        # macOS
+hostname -I                   # Linux
+```
 
-# Install PortAudio (required for PyAudio)
-brew install portaudio
+One person creates a room and shares the code; the other opens
+`http://<your-ip>:5001` and joins with it.
 
-# Pin setuptools to avoid distutils conflict
-pip install "setuptools==67.8.0"
+---
+
+## Repository layout
+
+```
+app.py                   Flask + Socket.IO server; the entry point
+index.html               Single-page frontend
+
+signbridge/              Library — importable without a camera or the dataset
+  tflite_inference.py      TFLite wrapper, drop-in for the Keras model
+  whisper_stt.py           Offline speech-to-text
+  ASL_RAG.py               Sign verification against the knowledge base
+  Gloss.py                 Signs to sentences
+  asl_knowledge_base.json  32 signs: handshape, movement, location, source
+
+scripts/
+  data/                  Data collection and normalization
+  convert/               TFLite conversion and test fixture export
+  demo/                  Standalone desktop demos
+
+models/tflite/           Deployed model and benchmark report
+assets/signs_gifs/       Sign animations for speech-to-sign
+documents/               Papers, presentations and design notes
+```
+
+Not in the repository: `data/` (the recorded dataset) and `.h5` weights. Both
+are regenerable — see below.
+
+---
+
+## Rebuilding from scratch
+
+```bash
+# 1. Record sequences (webcam, interactive)
+python "scripts/data/Data collection.py"
+
+# 2. Normalize and train
+python scripts/data/normalize_and_retrain.py
+
+# 3. Convert for mobile
+python scripts/convert/convert_to_native_tflite.py
 ```
 
 ---
 
-## ASL Classes (32 total)
+## Mobile
 
-**Gestures (6):** Hello, Thanks, Yes, No, Sorry, I Love You  
-**Alphabet (26):** A B C D E F G H I J K L M N O P Q R S T U V W X Y Z
+The model is converted to TensorFlow Lite using builtin operations only, so an
+Android build needs just the base runtime rather than the much larger Select
+Ops library.
+
+| | Size | Latency (p50) | Agreement with Keras |
+|---|---|---|---|
+| Keras `.h5` | 2241 KB | 13.3 ms | — |
+| TFLite float16 | 386 KB | 0.6 ms | 100.0% |
+| TFLite int8 | 209 KB | 0.7 ms | 97.9% |
+| **TFLite native fp16** | **392 KB** | **0.38 ms** | **100.0%** |
+
+int8 is smaller but flips predictions on the visually similar pairs, where the
+angular margins are only a few degrees — so float16 is what ships.
+
+On-device footprint is 392 KB of model plus roughly 1 MB of runtime.
 
 ---
 
-## Model
+## Authors
 
-The trained model (`action_norm.h5`) is available in [Releases](../../releases).
-
-- Architecture: 2-layer LSTM (128 → 64 units) + 2 Dense layers
-- Input: (30 frames, 126 normalized features)
-- Parameters: 188,288
-- Training: 5 independent runs, best by validation loss
-
-Place it in the project root before running.
+**Shashank Singh** and **Bhavya Sharma**
+Under the guidance of **Mrs. Archna Lakhe**
+Mukesh Patel School of Technology Management & Engineering,
+SVKM's NMIMS, Mumbai
 
 ---
 
-## Research
+## Accessibility context
 
-This project is accompanied by an IEEE-format research paper:
+Around 63 million people in India are deaf or hard of hearing, against roughly
+300 certified sign language interpreters. Most translation tools require a
+network connection, a subscription, or hardware that is not realistic in a
+classroom or a clinic.
 
-> *Real-Time Bidirectional Sign Language Translator: Sign-to-Speech, Speech-to-Sign, Networked Live Translation, and Web-Based Interface*  
+SignBridge runs offline on an ordinary laptop. That constraint shaped every
+technical decision here — the 126-dimension input, the small LSTM, the
+on-device speech recognition, the local LLM.
+
 ---
 
 ## License
 
-MIT License — see [LICENSE](LICENSE)
-
----
-
-## Acknowledgements
-
-- [ASL University (Lifeprint.com)](https://www.lifeprint.com) — Dr. Bill Vicars — ASL reference source
-- [Gallaudet University ASL Connect](https://www.gallaudet.edu) — Fingerspelling reference
-- [Google MediaPipe](https://mediapipe.dev) — Hand landmark detection
-- [HuggingFace Transformers](https://huggingface.co) — T5-small
-- [Meta Llama3 via Ollama](https://ollama.com) — Local LLM verification
+MIT — see [LICENSE](LICENSE).
