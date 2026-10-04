@@ -5,13 +5,13 @@ import time
 
 import requests
 
-OLLAMA_URL = os.environ.get('OLLAMA_URL', 'http://localhost:11434/api/generate')
-OLLAMA_MODEL = os.environ.get('OLLAMA_MODEL', 'llama3')
+OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434/api/generate")
+OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "llama3")
 TIMEOUT = 30
 
-KB_PATH = os.path.join(os.path.dirname(__file__), 'asl_knowledge_base.json')
+KB_PATH = os.path.join(os.path.dirname(__file__), "asl_knowledge_base.json")
 
-MARKER = re.compile(r'\[(SHOW|PRACTICE):([^\]]+)\]', re.IGNORECASE)
+MARKER = re.compile(r"\[(SHOW|PRACTICE):([^\]]+)\]", re.IGNORECASE)
 
 _kb = None
 
@@ -31,13 +31,13 @@ def lookup(name):
         return None
     target = name.strip().lower()
     for entry in knowledge_base():
-        if entry.get('sign', '').lower() == target:
+        if entry.get("sign", "").lower() == target:
             return entry
     return None
 
 
 def available_signs():
-    return [e.get('sign', '') for e in knowledge_base()]
+    return [e.get("sign", "") for e in knowledge_base()]
 
 
 SYSTEM_PROMPT = """You are a patient ASL tutor inside SignBridge, an app that
@@ -90,17 +90,17 @@ def call_ollama(prompt, system):
     resp = requests.post(
         OLLAMA_URL,
         json={
-            'model': OLLAMA_MODEL,
-            'prompt': prompt,
-            'system': system,
-            'stream': False,
-            'options': {'temperature': 0.7, 'num_predict': 300},
+            "model": OLLAMA_MODEL,
+            "prompt": prompt,
+            "system": system,
+            "stream": False,
+            "options": {"temperature": 0.7, "num_predict": 300},
         },
         timeout=TIMEOUT,
     )
     resp.raise_for_status()
 
-    text = resp.json().get('response', '').strip()
+    text = resp.json().get("response", "").strip()
     return text, int((time.time() - start) * 1000)
 
 
@@ -111,16 +111,18 @@ def parse_markers(text):
     for kind, name in MARKER.findall(text):
         entry = lookup(name)
         if entry:
-            actions.append({
-                'type': kind.lower(),
-                'sign': entry.get('sign'),
-                'handshape': entry.get('handshape'),
-                'movement': entry.get('movement'),
-                'location': entry.get('location'),
-            })
+            actions.append(
+                {
+                    "type": kind.lower(),
+                    "sign": entry.get("sign"),
+                    "handshape": entry.get("handshape"),
+                    "movement": entry.get("movement"),
+                    "location": entry.get("location"),
+                }
+            )
 
-    clean = MARKER.sub('', text).strip()
-    clean = re.sub(r'\n{3,}', '\n\n', clean)
+    clean = MARKER.sub("", text).strip()
+    clean = re.sub(r"\n{3,}", "\n\n", clean)
 
     return clean, actions
 
@@ -128,9 +130,9 @@ def parse_markers(text):
 def format_history(history, limit=6):
     lines = []
     for turn in history[-limit:]:
-        role = 'Learner' if turn.get('role') == 'user' else 'Tutor'
+        role = "Learner" if turn.get("role") == "user" else "Tutor"
         lines.append(f"{role}: {turn.get('content', '')}")
-    return '\n'.join(lines)
+    return "\n".join(lines)
 
 
 # ── Public API ─────────────────────────────────────────────────────────
@@ -145,7 +147,7 @@ def chat(message, history=None, current_sign=None):
     entry = lookup(current_sign) if current_sign else None
 
     system = SYSTEM_PROMPT.format(
-        signs=', '.join(available_signs()),
+        signs=", ".join(available_signs()),
         context=build_context(entry),
     )
 
@@ -158,10 +160,10 @@ def chat(message, history=None, current_sign=None):
         text, actions = parse_markers(raw)
 
         return {
-            'reply': text or "Which sign would you like to learn?",
-            'actions': actions,
-            'engine': OLLAMA_MODEL,
-            'latency_ms': latency,
+            "reply": text or "Which sign would you like to learn?",
+            "actions": actions,
+            "engine": OLLAMA_MODEL,
+            "latency_ms": latency,
         }
 
     except Exception as e:
@@ -179,36 +181,38 @@ def fallback(message):
     lowered = message.lower()
 
     for entry in knowledge_base():
-        name = entry.get('sign', '')
+        name = entry.get("sign", "")
         if name and name.lower() in lowered:
             return {
-                'reply': (
+                "reply": (
                     f"**{name}** — {entry.get('description')}\n\n"
                     f"Handshape: {entry.get('handshape')}\n"
                     f"Movement: {entry.get('movement')}\n"
                     f"Location: {entry.get('location')}"
                 ),
-                'actions': [{
-                    'type': 'show',
-                    'sign': name,
-                    'handshape': entry.get('handshape'),
-                    'movement': entry.get('movement'),
-                    'location': entry.get('location'),
-                }],
-                'engine': 'knowledge base',
-                'latency_ms': 0,
+                "actions": [
+                    {
+                        "type": "show",
+                        "sign": name,
+                        "handshape": entry.get("handshape"),
+                        "movement": entry.get("movement"),
+                        "location": entry.get("location"),
+                    }
+                ],
+                "engine": "knowledge base",
+                "latency_ms": 0,
             }
 
     return {
-        'reply': (
+        "reply": (
             "The language model is not running, so I can only look signs up "
             "directly. Name one and I will show it — for example, "
             "\"show me Thanks\".\n\n"
             f"Available: {', '.join(available_signs()[:12])}…"
         ),
-        'actions': [],
-        'engine': 'knowledge base',
-        'latency_ms': 0,
+        "actions": [],
+        "engine": "knowledge base",
+        "latency_ms": 0,
     }
 
 
@@ -220,15 +224,15 @@ def grade(expected, detected, confidence):
     model saw, so the feedback is specific rather than a bare right/wrong.
     """
     entry = lookup(expected)
-    correct = (detected or '').lower() == (expected or '').lower()
+    correct = (detected or "").lower() == (expected or "").lower()
 
     if not entry:
         return {
-            'reply': f"I don't have reference details for {expected}.",
-            'correct': correct,
-            'actions': [],
-            'engine': 'none',
-            'latency_ms': 0,
+            "reply": f"I don't have reference details for {expected}.",
+            "correct": correct,
+            "actions": [],
+            "engine": "none",
+            "latency_ms": 0,
         }
 
     system = (
@@ -254,8 +258,7 @@ def grade(expected, detected, confidence):
     else:
         wrong = lookup(detected)
         prompt += (
-            f"The model saw '{detected}' instead "
-            f"({confidence:.0f}% confidence).\n"
+            f"The model saw '{detected}' instead " f"({confidence:.0f}% confidence).\n"
         )
         if wrong:
             prompt += (
@@ -269,11 +272,11 @@ def grade(expected, detected, confidence):
         text, actions = parse_markers(raw)
 
         return {
-            'reply': text,
-            'correct': correct,
-            'actions': actions,
-            'engine': OLLAMA_MODEL,
-            'latency_ms': latency,
+            "reply": text,
+            "correct": correct,
+            "actions": actions,
+            "engine": OLLAMA_MODEL,
+            "latency_ms": latency,
         }
 
     except Exception as e:
@@ -294,30 +297,30 @@ def grade(expected, detected, confidence):
             )
 
         return {
-            'reply': text,
-            'correct': correct,
-            'actions': [] if correct else [{'type': 'show', 'sign': expected}],
-            'engine': 'knowledge base',
-            'latency_ms': 0,
+            "reply": text,
+            "correct": correct,
+            "actions": [] if correct else [{"type": "show", "sign": expected}],
+            "engine": "knowledge base",
+            "latency_ms": 0,
         }
 
 
 def health():
     """Is the LLM reachable?"""
     try:
-        base = OLLAMA_URL.rsplit('/api/', 1)[0]
+        base = OLLAMA_URL.rsplit("/api/", 1)[0]
         resp = requests.get(f"{base}/api/tags", timeout=3)
-        models = [m['name'] for m in resp.json().get('models', [])]
+        models = [m["name"] for m in resp.json().get("models", [])]
         return {
-            'available': True,
-            'model': OLLAMA_MODEL,
-            'installed': models,
-            'signs': len(knowledge_base()),
+            "available": True,
+            "model": OLLAMA_MODEL,
+            "installed": models,
+            "signs": len(knowledge_base()),
         }
     except Exception:
         return {
-            'available': False,
-            'model': None,
-            'installed': [],
-            'signs': len(knowledge_base()),
+            "available": False,
+            "model": None,
+            "installed": [],
+            "signs": len(knowledge_base()),
         }

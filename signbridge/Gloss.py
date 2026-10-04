@@ -1,5 +1,6 @@
 import re
 import threading
+
 import pyttsx3
 
 _tokenizer = None
@@ -10,7 +11,7 @@ def _load_t5():
     global _tokenizer, _t5_model
     if _t5_model is None:
         from transformers import T5ForConditionalGeneration, T5Tokenizer
-        import torch
+
         print("[T5] Loading T5-small...")
         _tokenizer = T5Tokenizer.from_pretrained("t5-small")
         _t5_model = T5ForConditionalGeneration.from_pretrained("t5-small")
@@ -18,25 +19,25 @@ def _load_t5():
         print("[T5] Ready ✓")
 
 
-LETTERS = set('ABCDEFGHIJKLMNOPQRSTUVWXYZ')
+LETTERS = set("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
 
-GESTURE_SIGNS = {'HELLO', 'THANKS', 'YES', 'I LOVE YOU', 'NO', 'SORRY'}
+GESTURE_SIGNS = {"HELLO", "THANKS", "YES", "I LOVE YOU", "NO", "SORRY"}
 
 RULES = {
-    ('HELLO',):                         "Hello!",
-    ('SORRY',):                         "I'm sorry.",
-    ('THANKS',):                        "Thank you.",
-    ('YES',):                           "Yes.",
-    ('NO',):                            "No.",
-    ('I LOVE YOU',):                    "I love you!",
-    ('HELLO', 'THANKS'):                "Hello, thank you!",
-    ('HELLO', 'YES'):                   "Hello, yes.",
-    ('HELLO', 'SORRY'):                 "Hello, I'm sorry.",
-    ('HELLO', 'I LOVE YOU'):            "Hello, I love you!",
-    ('NO', 'SORRY'):                    "No, I'm sorry.",
-    ('YES', 'THANKS'):                  "Yes, thank you.",
-    ('NO', 'THANKS'):                   "No, thank you.",
-    ('SORRY', 'YES'):                   "Yes, I'm sorry.",
+    ("HELLO",): "Hello!",
+    ("SORRY",): "I'm sorry.",
+    ("THANKS",): "Thank you.",
+    ("YES",): "Yes.",
+    ("NO",): "No.",
+    ("I LOVE YOU",): "I love you!",
+    ("HELLO", "THANKS"): "Hello, thank you!",
+    ("HELLO", "YES"): "Hello, yes.",
+    ("HELLO", "SORRY"): "Hello, I'm sorry.",
+    ("HELLO", "I LOVE YOU"): "Hello, I love you!",
+    ("NO", "SORRY"): "No, I'm sorry.",
+    ("YES", "THANKS"): "Yes, thank you.",
+    ("NO", "THANKS"): "No, thank you.",
+    ("SORRY", "YES"): "Yes, I'm sorry.",
 }
 
 
@@ -58,33 +59,29 @@ def group_letters(sign_buffer):
         else:
             # Flush accumulated letters as a word
             if letters:
-                gloss.append(''.join(letters))
+                gloss.append("".join(letters))
                 letters = []
             gloss.append(sign_up)
 
     if letters:
-        gloss.append(''.join(letters))
+        gloss.append("".join(letters))
 
     return gloss
 
+
 def rule_lookup(gloss_tokens):
     key = tuple(gloss_tokens)
-    return RULES.get(key, None)
+    return RULES.get(key)
 
 
 def t5_convert(gloss_tokens, max_length=64):
     _load_t5()
     import torch
 
-    gloss_str = ' '.join(gloss_tokens)
+    gloss_str = " ".join(gloss_tokens)
     prompt = f"convert ASL gloss to English sentence: {gloss_str}"
 
-    inputs = _tokenizer(
-        prompt,
-        return_tensors="pt",
-        max_length=128,
-        truncation=True
-    )
+    inputs = _tokenizer(prompt, return_tensors="pt", max_length=128, truncation=True)
 
     with torch.no_grad():
         outputs = _t5_model.generate(
@@ -104,16 +101,17 @@ def post_process(text):
         return text
     text = text.strip()
     text = text[0].upper() + text[1:]
-    if text[-1] not in '.!?':
-        text += '.'
-    text = re.sub(r'\s+', ' ', text)
+    if text[-1] not in ".!?":
+        text += "."
+    text = re.sub(r"\s+", " ", text)
     return text
+
 
 def speak(text):
     def _run():
         engine = pyttsx3.init()
-        engine.setProperty('rate', 150)
-        engine.setProperty('volume', 0.9)
+        engine.setProperty("rate", 150)
+        engine.setProperty("volume", 0.9)
         engine.say(text)
         engine.runAndWait()
 
@@ -121,7 +119,6 @@ def speak(text):
 
 
 def convert_and_speak(sign_buffer, verbose=True):
-
     if not sign_buffer:
         return [], "", "empty"
 
@@ -144,7 +141,7 @@ def convert_and_speak(sign_buffer, verbose=True):
         except Exception as e:
             print(f"  [T5] Error: {e}")
             # Fallback — join gloss tokens
-            sentence = post_process(' '.join(t.lower() for t in gloss))
+            sentence = post_process(" ".join(t.lower() for t in gloss))
             method = "fallback"
 
     if verbose:
@@ -158,24 +155,22 @@ def convert_and_speak(sign_buffer, verbose=True):
 
 # ── Test ──────────────────────────────────────────────────────────────
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_cases = [
         # Letter spelling
-        ['H', 'E', 'L', 'L', 'O'],
-        ['Y', 'O', 'U'],
-        ['H', 'O', 'W', 'A', 'R', 'E', 'Y', 'O', 'U'],
-
+        ["H", "E", "L", "L", "O"],
+        ["Y", "O", "U"],
+        ["H", "O", "W", "A", "R", "E", "Y", "O", "U"],
         # Gesture only
-        ['Hello'],
-        ['I LOVE YOU'],
-        ['Hello', 'Thanks'],
-
+        ["Hello"],
+        ["I LOVE YOU"],
+        ["Hello", "Thanks"],
         # Mixed
-        ['Hello', 'I LOVE YOU', 'Y', 'O', 'U'],
-        ['S', 'O', 'R', 'R', 'Y', 'No'],
-        ['Yes', 'I', 'A', 'M', 'O', 'K'],
-        ['Hello', 'M', 'Y', 'N', 'A', 'M', 'E', 'I', 'S', 'J', 'O', 'H', 'N'],
-        ['Thanks', 'Y', 'O', 'U'],
+        ["Hello", "I LOVE YOU", "Y", "O", "U"],
+        ["S", "O", "R", "R", "Y", "No"],
+        ["Yes", "I", "A", "M", "O", "K"],
+        ["Hello", "M", "Y", "N", "A", "M", "E", "I", "S", "J", "O", "H", "N"],
+        ["Thanks", "Y", "O", "U"],
     ]
 
     print("=" * 55)
