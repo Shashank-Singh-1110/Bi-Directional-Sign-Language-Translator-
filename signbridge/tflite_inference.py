@@ -1,16 +1,18 @@
 import os
 import time
+
 import numpy as np
 
 try:
     import tensorflow as tf
+
     Interpreter = tf.lite.Interpreter
 except ImportError:
     # tflite_runtime is a much smaller install for deployment
     from tflite_runtime.interpreter import Interpreter
 
 # Builtin-ops-only model — no Select Ops / Flex delegate required.
-DEFAULT_MODEL = 'models/tflite/action_native_fp16.tflite'
+DEFAULT_MODEL = "models/tflite/action_native_fp16.tflite"
 
 
 class TFLiteModel:
@@ -22,18 +24,15 @@ class TFLiteModel:
                 f"{model_path} not found — run convert_native_tflite.py first"
             )
         self.model_path = model_path
-        self.interpreter = Interpreter(
-            model_path=model_path,
-            num_threads=num_threads
-        )
+        self.interpreter = Interpreter(model_path=model_path, num_threads=num_threads)
         self.interpreter.allocate_tensors()
 
-        self.input_details  = self.interpreter.get_input_details()
+        self.input_details = self.interpreter.get_input_details()
         self.output_details = self.interpreter.get_output_details()
-        self.input_index    = self.input_details[0]['index']
-        self.output_index   = self.output_details[0]['index']
-        self.input_dtype    = self.input_details[0]['dtype']
-        self.input_shape    = self.input_details[0]['shape']
+        self.input_index = self.input_details[0]["index"]
+        self.output_index = self.output_details[0]["index"]
+        self.input_dtype = self.input_details[0]["dtype"]
+        self.input_shape = self.input_details[0]["shape"]
 
         # Running latency stats
         self._times = []
@@ -58,7 +57,7 @@ class TFLiteModel:
 
         results = []
         for i in range(X.shape[0]):
-            sample = X[i:i+1].astype(self.input_dtype)
+            sample = X[i : i + 1].astype(self.input_dtype)
             self.interpreter.set_tensor(self.input_index, sample)
 
             t0 = time.perf_counter()
@@ -89,35 +88,69 @@ class TFLiteModel:
             return {"calls": 0}
         t = np.array(self._times)
         return {
-            "calls":  len(t),
+            "calls": len(t),
             "mean_ms": round(float(t.mean()), 2),
-            "p50_ms":  round(float(np.percentile(t, 50)), 2),
-            "p95_ms":  round(float(np.percentile(t, 95)), 2),
-            "max_ms":  round(float(t.max()), 2),
+            "p50_ms": round(float(np.percentile(t, 50)), 2),
+            "p95_ms": round(float(np.percentile(t, 95)), 2),
+            "max_ms": round(float(t.max()), 2),
         }
 
 
 # ── Verification utility ───────────────────────────────────────────────
-def verify_against_keras(tflite_path: str, keras_path: str,
-                         n_samples: int = 50, data_dir: str = "DATASET_NORM"):
+def verify_against_keras(
+    tflite_path: str,
+    keras_path: str,
+    n_samples: int = 50,
+    data_dir: str = "DATASET_NORM",
+):
     """
     Confirm the TFLite model produces the same predictions as Keras.
     Run this after conversion before deploying.
     """
     import tensorflow as tf
 
-    ACTIONS = np.array([
-        'Hello', 'Thanks', 'Yes', 'I LOVE YOU', 'No', 'Sorry',
-        'A','B','C','D','E','F','G','H','I','J',
-        'K','L','M','N','O','P','Q','R','S','T',
-        'U','V','W','X','Y','Z'
-    ])
+    ACTIONS = np.array(
+        [
+            "Hello",
+            "Thanks",
+            "Yes",
+            "I LOVE YOU",
+            "No",
+            "Sorry",
+            "A",
+            "B",
+            "C",
+            "D",
+            "E",
+            "F",
+            "G",
+            "H",
+            "I",
+            "J",
+            "K",
+            "L",
+            "M",
+            "N",
+            "O",
+            "P",
+            "Q",
+            "R",
+            "S",
+            "T",
+            "U",
+            "V",
+            "W",
+            "X",
+            "Y",
+            "Z",
+        ]
+    )
 
     print("=" * 60)
     print("TFLite vs Keras Verification")
     print("=" * 60)
 
-    keras_model  = tf.keras.models.load_model(keras_path)
+    keras_model = tf.keras.models.load_model(keras_path)
     tflite_model = TFLiteModel(tflite_path)
 
     # Load some real sequences
@@ -126,7 +159,7 @@ def verify_against_keras(tflite_path: str, keras_path: str,
         d = os.path.join(data_dir, action)
         if not os.path.isdir(d):
             continue
-        for seq in sorted(os.listdir(d))[:2]:      # 2 per class
+        for seq in sorted(os.listdir(d))[:2]:  # 2 per class
             sd = os.path.join(d, seq)
             if not os.path.isdir(sd):
                 continue
@@ -150,14 +183,14 @@ def verify_against_keras(tflite_path: str, keras_path: str,
 
     print(f"\nTesting on {len(X)} sequences\n")
 
-    keras_preds  = np.argmax(keras_model.predict(X, verbose=0), axis=1)
+    keras_preds = np.argmax(keras_model.predict(X, verbose=0), axis=1)
     tflite_preds = np.argmax(tflite_model.predict(X), axis=1)
 
     agreement = float(np.mean(keras_preds == tflite_preds)) * 100
     print(f"Agreement with Keras: {agreement:.2f}%")
 
     if y is not None:
-        keras_acc  = float(np.mean(keras_preds == y)) * 100
+        keras_acc = float(np.mean(keras_preds == y)) * 100
         tflite_acc = float(np.mean(tflite_preds == y)) * 100
         print(f"Keras accuracy:       {keras_acc:.2f}%")
         print(f"TFLite accuracy:      {tflite_acc:.2f}%")
@@ -170,8 +203,10 @@ def verify_against_keras(tflite_path: str, keras_path: str,
     if len(mismatches):
         print(f"\n{len(mismatches)} disagreements:")
         for i in mismatches[:10]:
-            print(f"  sample {i}: Keras={ACTIONS[keras_preds[i]]:<12} "
-                  f"TFLite={ACTIONS[tflite_preds[i]]}")
+            print(
+                f"  sample {i}: Keras={ACTIONS[keras_preds[i]]:<12} "
+                f"TFLite={ACTIONS[tflite_preds[i]]}"
+            )
     else:
         print("\nNo disagreements — TFLite output matches Keras exactly")
 
@@ -199,5 +234,7 @@ if __name__ == "__main__":
         print(f"\nLatency over 10 runs: {m.stats()}")
     else:
         print("Usage:")
-        print("  python tflite_inference.py <tflite_path>                  # info + latency")
+        print(
+            "  python tflite_inference.py <tflite_path>                  # info + latency"
+        )
         print("  python tflite_inference.py <tflite_path> <keras_path>     # verify")

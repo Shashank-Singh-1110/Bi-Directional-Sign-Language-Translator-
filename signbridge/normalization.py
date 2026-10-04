@@ -13,9 +13,9 @@ The transform is what makes the model distance-invariant — the same sign at
 import numpy as np
 
 LANDMARKS = 21
-HAND_DIM = LANDMARKS * 3      # 63
-FEATURE_DIM = HAND_DIM * 2    # 126
-RAW_DIM = 258                 # pose(132) + left(63) + right(63)
+HAND_DIM = LANDMARKS * 3  # 63
+FEATURE_DIM = HAND_DIM * 2  # 126
+RAW_DIM = 258  # pose(132) + left(63) + right(63)
 
 EPSILON = 1e-6
 
@@ -62,10 +62,12 @@ def normalize_keypoints(raw_258: np.ndarray) -> np.ndarray:
     if raw_258.shape != (RAW_DIM,):
         raise ValueError(f"Expected shape ({RAW_DIM},), got {raw_258.shape}")
 
-    return np.concatenate([
-        normalize_hand(raw_258[LEFT_SLICE]),
-        normalize_hand(raw_258[RIGHT_SLICE]),
-    ])
+    return np.concatenate(
+        [
+            normalize_hand(raw_258[LEFT_SLICE]),
+            normalize_hand(raw_258[RIGHT_SLICE]),
+        ]
+    )
 
 
 def build_features(left_63: np.ndarray, right_63: np.ndarray) -> np.ndarray:

@@ -86,9 +86,7 @@ def test_translation_invariance(shift):
     hand = random_hand()
     moved = (hand.reshape(LANDMARKS, 3) + shift).flatten()
 
-    np.testing.assert_allclose(
-        normalize_hand(hand), normalize_hand(moved), atol=1e-5
-    )
+    np.testing.assert_allclose(normalize_hand(hand), normalize_hand(moved), atol=1e-5)
 
 
 # ── Absent-hand path ───────────────────────────────────────────────────
@@ -149,6 +147,7 @@ def test_matches_reference_implementation():
     The original in-line implementation from normalize_and_retrain.py,
     reproduced here. The extracted module must not have changed behaviour.
     """
+
     def reference(hand_63):
         pts = hand_63.reshape(21, 3)
         wrist = pts[0].copy()
@@ -161,6 +160,4 @@ def test_matches_reference_implementation():
 
     for _ in range(20):
         hand = random_hand()
-        np.testing.assert_allclose(
-            normalize_hand(hand), reference(hand), atol=1e-6
-        )
+        np.testing.assert_allclose(normalize_hand(hand), reference(hand), atol=1e-6)

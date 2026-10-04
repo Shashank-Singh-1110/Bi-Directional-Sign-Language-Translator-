@@ -1,11 +1,12 @@
 import os
-import time
 import tempfile
+import time
 import wave
+
 import numpy as np
 
-MODEL_SIZE     = os.environ.get("WHISPER_MODEL", "small.en")
-SAMPLE_RATE    = 16000
+MODEL_SIZE = os.environ.get("WHISPER_MODEL", "small.en")
+SAMPLE_RATE = 16000
 FALLBACK_TO_GOOGLE = True
 
 _model = None
@@ -44,6 +45,7 @@ def warm_up():
     except Exception as e:
         print(f"[WHISPER] Warm-up skipped: {e}")
 
+
 def transcribe_array(audio: np.ndarray, sample_rate: int = SAMPLE_RATE) -> dict:
     t0 = time.time()
 
@@ -67,10 +69,10 @@ def transcribe_array(audio: np.ndarray, sample_rate: int = SAMPLE_RATE) -> dict:
         )
         text = result.get("text", "").strip()
         return {
-            "text":       text,
-            "engine":     "whisper",
+            "text": text,
+            "engine": "whisper",
             "latency_ms": int((time.time() - t0) * 1000),
-            "model":      MODEL_SIZE,
+            "model": MODEL_SIZE,
         }
 
     except Exception as e:
@@ -91,18 +93,19 @@ def transcribe_file(path: str) -> dict:
             condition_on_previous_text=False,
         )
         return {
-            "text":       result.get("text", "").strip(),
-            "engine":     "whisper",
+            "text": result.get("text", "").strip(),
+            "engine": "whisper",
             "latency_ms": int((time.time() - t0) * 1000),
-            "model":      MODEL_SIZE,
+            "model": MODEL_SIZE,
         }
     except Exception as e:
         print(f"[WHISPER] File transcription error: {e}")
         return {"text": "", "engine": "failed", "latency_ms": 0, "model": MODEL_SIZE}
 
 
-def transcribe_frames(frames: list, sample_width: int = 2,
-                      channels: int = 1, rate: int = 16000) -> dict:
+def transcribe_frames(
+    frames: list, sample_width: int = 2, channels: int = 1, rate: int = 16000
+) -> dict:
     raw = b"".join(frames)
     audio = np.frombuffer(raw, dtype=np.int16).astype(np.float32) / 32768.0
 
@@ -112,18 +115,20 @@ def transcribe_frames(frames: list, sample_width: int = 2,
 
     return transcribe_array(audio, sample_rate=rate)
 
+
 def _resample(audio: np.ndarray, src_rate: int, dst_rate: int) -> np.ndarray:
     if src_rate == dst_rate:
         return audio
     duration = len(audio) / src_rate
-    dst_len  = int(duration * dst_rate)
-    src_idx  = np.linspace(0, len(audio) - 1, dst_len)
+    dst_len = int(duration * dst_rate)
+    src_idx = np.linspace(0, len(audio) - 1, dst_len)
     return np.interp(src_idx, np.arange(len(audio)), audio).astype(np.float32)
 
 
 def _google_fallback(audio: np.ndarray, t0: float) -> dict:
     try:
         import speech_recognition as sr
+
         with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
             tmp_path = tmp.name
         pcm = (np.clip(audio, -1, 1) * 32767).astype(np.int16)
@@ -141,10 +146,10 @@ def _google_fallback(audio: np.ndarray, t0: float) -> dict:
         os.unlink(tmp_path)
         print("[WHISPER] Fell back to Google STT")
         return {
-            "text":       text,
-            "engine":     "google",
+            "text": text,
+            "engine": "google",
             "latency_ms": int((time.time() - t0) * 1000),
-            "model":      "google-stt",
+            "model": "google-stt",
         }
     except Exception as e:
         print(f"[WHISPER] Google fallback also failed: {e}")
@@ -153,13 +158,14 @@ def _google_fallback(audio: np.ndarray, t0: float) -> dict:
 
 def get_engine_info() -> dict:
     return {
-        "engine":        "whisper",
-        "model":         MODEL_SIZE,
-        "loaded":        _model is not None,
-        "load_time_s":   round(_load_time, 1) if _load_time else None,
-        "offline":       True,
-        "requires_key":  False,
+        "engine": "whisper",
+        "model": MODEL_SIZE,
+        "loaded": _model is not None,
+        "load_time_s": round(_load_time, 1) if _load_time else None,
+        "offline": True,
+        "requires_key": False,
     }
+
 
 def benchmark(audio_path: str, sizes: list = None):
     global _model, MODEL_SIZE
@@ -174,19 +180,24 @@ def benchmark(audio_path: str, sizes: list = None):
         load_t = time.time() - t0
 
         r = transcribe_file(audio_path)
-        results.append({
-            "model":       size,
-            "load_s":      round(load_t, 1),
-            "inference_ms": r["latency_ms"],
-            "text":        r["text"],
-        })
-        print(f"  {size:10} | load {load_t:5.1f}s | infer {r['latency_ms']:5}ms | {r['text'][:50]}")
+        results.append(
+            {
+                "model": size,
+                "load_s": round(load_t, 1),
+                "inference_ms": r["latency_ms"],
+                "text": r["text"],
+            }
+        )
+        print(
+            f"  {size:10} | load {load_t:5.1f}s | infer {r['latency_ms']:5}ms | {r['text'][:50]}"
+        )
 
     return results
 
 
 if __name__ == "__main__":
     import sys
+
     print("=" * 60)
     print("Whisper Offline STT — SignBridge")
     print("=" * 60)
