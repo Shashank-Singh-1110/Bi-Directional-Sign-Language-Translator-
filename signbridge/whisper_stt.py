@@ -27,7 +27,7 @@ def load_model(size: str = None):
             "Whisper not installed. Run:\n"
             "    pip install openai-whisper\n"
             "    brew install ffmpeg"
-        )
+        ) from None
 
     print(f"[WHISPER] Loading model '{size}' (first run downloads ~500MB)...")
     _model = whisper.load_model(size)

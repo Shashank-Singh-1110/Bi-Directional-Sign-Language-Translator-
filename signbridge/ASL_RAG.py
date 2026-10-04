@@ -50,7 +50,6 @@ def retrieve(sign: str) -> dict | None:
 
 
 def _call_llama(prompt: str, timeout: int = 10) -> str:
-    key = prompt.upper().strip()
     try:
         resp = requests.post(
             OLLAMA_URL,
