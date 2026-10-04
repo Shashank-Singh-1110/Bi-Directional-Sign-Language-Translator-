@@ -77,7 +77,10 @@ jobs:
         with:
           python-version: "3.11"
 
-      - run: pip install numpy tflite-runtime
+      # tflite-runtime wheels are compiled against the NumPy 1.x ABI.
+      # Unpinned, pip installs NumPy 2.x and the interpreter fails to
+      # import. requirements.txt already pins this for deployment.
+      - run: pip install "numpy<2" tflite-runtime
 
       - name: Interpreter loads the shipped model
         run: |
