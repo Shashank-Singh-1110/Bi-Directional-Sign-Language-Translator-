@@ -1,15 +1,10 @@
-tensorflow==2.16.2
-mediapipe==0.10.14
-protobuf==4.25.9
-opencv-python
-numpy
-flask
-flask-socketio
-flask-cors
-eventlet
-pyaudio
-SpeechRecognition
-transformers
-torch
-sentencepiece
-requests
+# Deployment set. No TensorFlow, MediaPipe or OpenCV — MediaPipe runs in
+# the browser and the classifier needs only the TFLite interpreter.
+# Local development uses requirements/base.txt.
+numpy>=1.26,<2.0
+flask>=3.0
+flask-socketio>=5.3
+flask-cors>=4.0
+eventlet>=0.35
+requests>=2.31
+tflite-runtime>=2.14 ; sys_platform == "linux"

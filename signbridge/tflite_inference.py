@@ -10,7 +10,7 @@ except ImportError:
     from tflite_runtime.interpreter import Interpreter
 
 # Builtin-ops-only model — no Select Ops / Flex delegate required.
-DEFAULT_MODEL = 'tflite_models/action_native_fp16.tflite'
+DEFAULT_MODEL = 'models/tflite/action_native_fp16.tflite'
 
 
 class TFLiteModel:

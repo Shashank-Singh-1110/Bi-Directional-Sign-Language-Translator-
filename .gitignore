@@ -38,3 +38,8 @@ Thumbs.db
 *.key
 
 android_fixtures.json
+android/app/src/main/assets/*.task
+android/app/src/main/assets/*.tflite
+# Debug artefacts
+android_vector.txt
+requirements-old-backup.txt

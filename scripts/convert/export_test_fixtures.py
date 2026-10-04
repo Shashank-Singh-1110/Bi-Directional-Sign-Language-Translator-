@@ -3,7 +3,7 @@ import json
 
 import numpy as np
 
-RAW_DATA  = 'DATASET'          # raw 258-dim frames
+RAW_DATA  = 'data/DATASET'          # raw 258-dim frames
 OUT_FILE  = '../../android_fixtures.json'
 N_CASES   = 12                 # spread across classes and hand configurations
 
