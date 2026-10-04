@@ -24,9 +24,9 @@ import tensorflow as tf
 # ─────────────────────────────────────────────
 #  CONFIG
 # ─────────────────────────────────────────────
-KERAS_MODEL  = 'action_norm.h5'
-DATASET_NORM = 'DATASET_NORM'
-OUT_DIR      = '../../models/tflite/tflite_models'
+KERAS_MODEL  = 'models/action_norm.h5'
+DATASET_NORM = 'data/DATASET_NORM'
+OUT_DIR      = 'models/tflite/'
 SEQ_LEN      = 30
 N_FEATURES   = 126
 EVAL_SAMPLES = 96
@@ -105,6 +105,10 @@ def convert_native(static_model, float16=True):
     If the LSTM still does not fuse, the converter raises here rather than
     quietly emitting a Flex-dependent model — which is the point.
     """
+    from tensorflow.python.framework.convert_to_constants import (
+        convert_variables_to_constants_v2,
+    )
+
     @tf.function(input_signature=[
         tf.TensorSpec(shape=[1, SEQ_LEN, N_FEATURES], dtype=tf.float32)
     ])
@@ -113,9 +117,14 @@ def convert_native(static_model, float16=True):
 
     concrete = serve.get_concrete_function()
 
-    # Second arg keeps the variables alive during conversion
+    # Inline the weights as constants. Keras 3.15 leaves them as live
+    # resource variables, and the converter then fails with
+    # "ReadVariableOp: missing attribute 'value'".
+    frozen = convert_variables_to_constants_v2(concrete)
+    frozen.graph.as_graph_def()
+
     conv = tf.lite.TFLiteConverter.from_concrete_functions(
-        [concrete], static_model
+        [frozen], static_model
     )
     conv.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS]
 

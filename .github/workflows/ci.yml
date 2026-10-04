@@ -1,0 +1,110 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "feat/**", "fix/**", "chore/**"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - run: pip install ruff==0.6.9
+      - run: ruff check .
+      - run: ruff format --check .
+
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      # Only numpy and pytest. The normalization under test is pure numpy,
+      # so the whole run finishes in seconds rather than minutes.
+      - run: pip install numpy pytest
+
+      - run: pytest tests/ -v --tb=short
+
+  deployable:
+    name: Deployment set installs and imports
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      # Catches the failure mode that only shows up in production: the
+      # slim requirements missing something app.py imports.
+      - run: pip install -r requirements.txt
+
+      - name: Server imports without TensorFlow or MediaPipe
+        run: |
+          python - <<'PY'
+          import importlib.util, sys
+
+          for forbidden in ('tensorflow', 'mediapipe', 'cv2'):
+              if importlib.util.find_spec(forbidden):
+                  sys.exit(f"{forbidden} is installed; the deploy set should not need it")
+
+          import app   # noqa: F401
+          print("app.py imports cleanly on the deployment requirements")
+          PY
+
+  model:
+    name: Model present and loadable
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - run: pip install numpy tflite-runtime
+
+      - name: Interpreter loads the shipped model
+        run: |
+          python - <<'PY'
+          import os
+
+          path = 'models/tflite/action_native_fp16.tflite'
+          assert os.path.exists(path), f"{path} is missing from the repo"
+
+          size_kb = os.path.getsize(path) // 1024
+          print(f"{path}  {size_kb} KB")
+
+          from tflite_runtime.interpreter import Interpreter
+          interp = Interpreter(model_path=path)
+          interp.allocate_tensors()
+
+          inp = interp.get_input_details()[0]
+          out = interp.get_output_details()[0]
+
+          assert list(inp['shape']) == [1, 30, 126], f"unexpected input {inp['shape']}"
+          assert list(out['shape']) == [1, 32], f"unexpected output {out['shape']}"
+
+          ops = sorted({d['op_name'] for d in interp._get_ops_details()})
+          flex = [o for o in ops if o.lower().startswith('flex')]
+          assert not flex, f"model needs Select Ops: {flex}"
+
+          print("input", inp['shape'], "output", out['shape'])
+          print("ops:", ', '.join(ops))
+          print("builtin ops only — base runtime is enough")
+          PY

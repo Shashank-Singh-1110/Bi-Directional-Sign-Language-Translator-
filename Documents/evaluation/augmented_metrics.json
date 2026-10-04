@@ -1,0 +1,10 @@
+{
+  "model": "models/action_aug.h5",
+  "variants_per_sequence": 20,
+  "training_sequences": 15360,
+  "test_sequences": 192,
+  "holdout_from_sequence": 24,
+  "accuracy": 100.0,
+  "mean_confidence_correct": 100.0,
+  "min_confidence_correct": 100.0
+}

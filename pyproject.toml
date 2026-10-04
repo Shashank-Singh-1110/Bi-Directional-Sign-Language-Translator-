@@ -1,0 +1,22 @@
+[project]
+name = "signbridge"
+version = "0.3.0"
+description = "Real-Time Bidirectional Sign Language Translator"
+requires-python = ">=3.11"
+
+[tool.ruff]
+line-length = 88
+target-version = "py311"
+exclude = ["scripts/", "android/", ".venv/", "models/", "data/", "documents/"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM"]
+ignore = ["E501", "B008"]
+
+[tool.ruff.lint.per-file-ignores]
+"app.py" = ["E402"]
+"tests/*" = ["E402"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
