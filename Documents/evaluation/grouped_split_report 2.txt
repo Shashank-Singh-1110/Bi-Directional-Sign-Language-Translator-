@@ -1,0 +1,48 @@
+SignBridge — grouped-split evaluation
+Held out: sequences 24+ of each class (192 sequences)
+
+Random split accuracy  : 99.48%
+Grouped split accuracy : 100.00%
+Gap                    : -0.52 points
+
+The gap measures how much the random split was inflated by
+near-duplicate sequences appearing in both train and test.
+
+              precision    recall  f1-score   support
+
+       Hello       1.00      1.00      1.00         6
+      Thanks       1.00      1.00      1.00         6
+         Yes       1.00      1.00      1.00         6
+  I LOVE YOU       1.00      1.00      1.00         6
+          No       1.00      1.00      1.00         6
+       Sorry       1.00      1.00      1.00         6
+           A       1.00      1.00      1.00         6
+           B       1.00      1.00      1.00         6
+           C       1.00      1.00      1.00         6
+           D       1.00      1.00      1.00         6
+           E       1.00      1.00      1.00         6
+           F       1.00      1.00      1.00         6
+           G       1.00      1.00      1.00         6
+           H       1.00      1.00      1.00         6
+           I       1.00      1.00      1.00         6
+           J       1.00      1.00      1.00         6
+           K       1.00      1.00      1.00         6
+           L       1.00      1.00      1.00         6
+           M       1.00      1.00      1.00         6
+           N       1.00      1.00      1.00         6
+           O       1.00      1.00      1.00         6
+           P       1.00      1.00      1.00         6
+           Q       1.00      1.00      1.00         6
+           R       1.00      1.00      1.00         6
+           S       1.00      1.00      1.00         6
+           T       1.00      1.00      1.00         6
+           U       1.00      1.00      1.00         6
+           V       1.00      1.00      1.00         6
+           W       1.00      1.00      1.00         6
+           X       1.00      1.00      1.00         6
+           Y       1.00      1.00      1.00         6
+           Z       1.00      1.00      1.00         6
+
+    accuracy                           1.00       192
+   macro avg       1.00      1.00      1.00       192
+weighted avg       1.00      1.00      1.00       192

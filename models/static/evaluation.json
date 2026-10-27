@@ -1,0 +1,43 @@
+{
+  "protocol": "leave-one-signer-out over Surrey plus the recorded signer",
+  "folds": {
+    "A": 0.9135824331503453,
+    "B": 0.924109139704786,
+    "C": 0.9542176484887772,
+    "D": 0.8927811425765264,
+    "E": 0.9386803825444024,
+    "self": 0.41805555555555557
+  },
+  "mean": 0.8402377170033987,
+  "std": 0.18977830712377358,
+  "held_out_self": 0.41805555555555557,
+  "surrey_vectors": 61710,
+  "recorded_vectors": 3600,
+  "recorded_per_class": 150,
+  "letters": [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g",
+    "h",
+    "i",
+    "k",
+    "l",
+    "m",
+    "n",
+    "o",
+    "p",
+    "q",
+    "r",
+    "s",
+    "t",
+    "u",
+    "v",
+    "w",
+    "x",
+    "y"
+  ]
+}

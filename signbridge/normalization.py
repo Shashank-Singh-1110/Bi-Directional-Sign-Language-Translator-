@@ -1,10 +1,8 @@
 """
 signbridge/normalization.py — Wrist-origin hand normalization
 
-Extracted from normalize_and_retrain.py so it can be imported and tested
-without pulling in TensorFlow, MediaPipe or the dataset. This is the single
-source of truth for the transform: the training pipeline, the Flask backend
-and the Kotlin port all have to agree with what is here.
+This is the single source of truth for the transform: the training pipeline,
+the Flask backend and the browser all have to agree with what is here.
 
 The transform is what makes the model distance-invariant — the same sign at
 30 cm and 100 cm yields vectors with cosine similarity above 0.99.
@@ -13,9 +11,9 @@ The transform is what makes the model distance-invariant — the same sign at
 import numpy as np
 
 LANDMARKS = 21
-HAND_DIM = LANDMARKS * 3  # 63
-FEATURE_DIM = HAND_DIM * 2  # 126
-RAW_DIM = 258  # pose(132) + left(63) + right(63)
+HAND_DIM = LANDMARKS * 3      # 63
+FEATURE_DIM = HAND_DIM * 2    # 126
+RAW_DIM = 258                 # pose(132) + left(63) + right(63)
 
 EPSILON = 1e-6
 
@@ -62,12 +60,10 @@ def normalize_keypoints(raw_258: np.ndarray) -> np.ndarray:
     if raw_258.shape != (RAW_DIM,):
         raise ValueError(f"Expected shape ({RAW_DIM},), got {raw_258.shape}")
 
-    return np.concatenate(
-        [
-            normalize_hand(raw_258[LEFT_SLICE]),
-            normalize_hand(raw_258[RIGHT_SLICE]),
-        ]
-    )
+    return np.concatenate([
+        normalize_hand(raw_258[LEFT_SLICE]),
+        normalize_hand(raw_258[RIGHT_SLICE]),
+    ])
 
 
 def build_features(left_63: np.ndarray, right_63: np.ndarray) -> np.ndarray:
@@ -83,3 +79,72 @@ def build_features(left_63: np.ndarray, right_63: np.ndarray) -> np.ndarray:
 def empty_hand() -> np.ndarray:
     """A not-detected hand."""
     return np.zeros(HAND_DIM, dtype=np.float32)
+
+
+# ── Canonical hand placement ────────────────────────────────────────────
+#
+# For a one-handed sign only one block is populated, and which one depends
+# on the hand the signer used. A model trained mostly on one block has
+# nothing to match when the features arrive in the other, so it fails
+# completely rather than degrading.
+#
+# This was visible three ways before it was understood:
+#
+#   - the deployed app recognised one hand and ignored the other
+#   - the recorded dataset splits 74% right-slot, 25% left-slot, per letter
+#   - cross-dataset accuracy sat at 25-38%, with a different quarter of the
+#     letters failing depending on which convention was aligned
+#
+# Canonicalising removes the ambiguity: a one-handed sign always occupies
+# the same block, so the model learns the handshape once rather than twice,
+# and a signer may use either hand.
+#
+# Two-handed signs are left alone — there the two blocks carry genuinely
+# different information and collapsing them would destroy it.
+
+CANONICAL_SLOT = "right"   # the majority convention in the recorded data
+
+
+def hand_present(hand_63: np.ndarray) -> bool:
+    """Whether a hand block carries data rather than being all zeros."""
+    return bool(np.abs(hand_63).sum() > EPSILON)
+
+
+def canonicalise(features_126: np.ndarray) -> np.ndarray:
+    """
+    Place a lone hand in a fixed block, leaving two-handed signs untouched.
+
+    Returns a new array; the input is not modified.
+    """
+    features = np.asarray(features_126, dtype=np.float32).copy()
+
+    # Copied, not sliced: a view into `features` would be zeroed by the
+    # assignment below before it could be written to the other block.
+    left = features[:HAND_DIM].copy()
+    right = features[HAND_DIM:]
+
+    if hand_present(left) and not hand_present(right):
+        features[:HAND_DIM] = 0.0
+        features[HAND_DIM:] = left
+
+    return features
+
+
+def canonicalise_batch(X: np.ndarray) -> np.ndarray:
+    """
+    Canonicalise a stack of feature vectors.
+
+    Vectorised rather than looped: these run over tens of thousands of rows
+    during extraction.
+    """
+    X = np.asarray(X, dtype=np.float32).copy()
+
+    has_left = np.abs(X[:, :HAND_DIM]).sum(axis=1) > EPSILON
+    has_right = np.abs(X[:, HAND_DIM:]).sum(axis=1) > EPSILON
+
+    lone_left = has_left & ~has_right
+
+    X[lone_left, HAND_DIM:] = X[lone_left, :HAND_DIM]
+    X[lone_left, :HAND_DIM] = 0.0
+
+    return X

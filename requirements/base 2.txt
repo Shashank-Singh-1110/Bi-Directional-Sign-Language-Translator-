@@ -1,0 +1,13 @@
+numpy>=1.26,<2.0
+tensorflow==2.16.2
+mediapipe==0.10.14
+opencv-python>=4.9,<5
+protobuf==4.25.9
+flask>=3.0
+flask-socketio>=5.3
+flask-cors>=4.0
+eventlet>=0.35
+requests>=2.31
+openai-whisper
+SpeechRecognition
+setuptools<81

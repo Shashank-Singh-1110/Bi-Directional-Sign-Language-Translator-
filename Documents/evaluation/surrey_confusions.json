@@ -1,0 +1,212 @@
+{
+  "protocol": "leave-one-signer-out, predictions pooled",
+  "pooled_accuracy": 0.9231404958677686,
+  "labels": [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g",
+    "h",
+    "i",
+    "k",
+    "l",
+    "m",
+    "n",
+    "o",
+    "p",
+    "q",
+    "r",
+    "s",
+    "t",
+    "u",
+    "v",
+    "w",
+    "x",
+    "y"
+  ],
+  "top_confusions": [
+    {
+      "true": "r",
+      "predicted": "u",
+      "count": 521,
+      "share": 0.18159637504356918
+    },
+    {
+      "true": "e",
+      "predicted": "o",
+      "count": 193,
+      "share": 0.07568627450980392
+    },
+    {
+      "true": "i",
+      "predicted": "y",
+      "count": 170,
+      "share": 0.06727344677483181
+    },
+    {
+      "true": "o",
+      "predicted": "e",
+      "count": 149,
+      "share": 0.0639759553456419
+    },
+    {
+      "true": "n",
+      "predicted": "m",
+      "count": 156,
+      "share": 0.06369946917109025
+    },
+    {
+      "true": "q",
+      "predicted": "o",
+      "count": 126,
+      "share": 0.056807935076645624
+    },
+    {
+      "true": "p",
+      "predicted": "q",
+      "count": 123,
+      "share": 0.05203045685279188
+    },
+    {
+      "true": "t",
+      "predicted": "s",
+      "count": 128,
+      "share": 0.05001953888237593
+    },
+    {
+      "true": "u",
+      "predicted": "r",
+      "count": 124,
+      "share": 0.047784200385356454
+    },
+    {
+      "true": "k",
+      "predicted": "v",
+      "count": 136,
+      "share": 0.04766912022432527
+    },
+    {
+      "true": "k",
+      "predicted": "h",
+      "count": 108,
+      "share": 0.03785488958990536
+    },
+    {
+      "true": "b",
+      "predicted": "c",
+      "count": 99,
+      "share": 0.03698169592827792
+    },
+    {
+      "true": "t",
+      "predicted": "a",
+      "count": 89,
+      "share": 0.03477921062915201
+    },
+    {
+      "true": "q",
+      "predicted": "e",
+      "count": 77,
+      "share": 0.034715960324616775
+    },
+    {
+      "true": "q",
+      "predicted": "p",
+      "count": 77,
+      "share": 0.034715960324616775
+    },
+    {
+      "true": "m",
+      "predicted": "n",
+      "count": 73,
+      "share": 0.032458870609159626
+    },
+    {
+      "true": "t",
+      "predicted": "n",
+      "count": 83,
+      "share": 0.032434544744040644
+    },
+    {
+      "true": "i",
+      "predicted": "a",
+      "count": 80,
+      "share": 0.031658092599920855
+    },
+    {
+      "true": "e",
+      "predicted": "s",
+      "count": 63,
+      "share": 0.024705882352941175
+    },
+    {
+      "true": "x",
+      "predicted": "k",
+      "count": 58,
+      "share": 0.023937267849773007
+    },
+    {
+      "true": "r",
+      "predicted": "k",
+      "count": 68,
+      "share": 0.023701638201463926
+    },
+    {
+      "true": "x",
+      "predicted": "p",
+      "count": 57,
+      "share": 0.02352455633512175
+    },
+    {
+      "true": "r",
+      "predicted": "x",
+      "count": 65,
+      "share": 0.02265597769257581
+    },
+    {
+      "true": "s",
+      "predicted": "e",
+      "count": 55,
+      "share": 0.02110514198004605
+    },
+    {
+      "true": "n",
+      "predicted": "t",
+      "count": 49,
+      "share": 0.02000816659861168
+    },
+    {
+      "true": "p",
+      "predicted": "x",
+      "count": 47,
+      "share": 0.01988155668358714
+    },
+    {
+      "true": "y",
+      "predicted": "a",
+      "count": 47,
+      "share": 0.018266614846482704
+    },
+    {
+      "true": "k",
+      "predicted": "n",
+      "count": 52,
+      "share": 0.018226428321065545
+    },
+    {
+      "true": "a",
+      "predicted": "t",
+      "count": 45,
+      "share": 0.017334360554699536
+    },
+    {
+      "true": "c",
+      "predicted": "b",
+      "count": 38,
+      "share": 0.014514896867838044
+    }
+  ]
+}

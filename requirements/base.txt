@@ -11,3 +11,5 @@ requests>=2.31
 openai-whisper
 SpeechRecognition
 setuptools<81
+numpy>=1.26,<2.0
+huggingface_hub<2.0

@@ -1,0 +1,22 @@
+{
+  "model": "models/action_norm.h5",
+  "holdout_from_sequence": 24,
+  "random_split": {
+    "sequences": 192,
+    "accuracy": 99.48,
+    "correct": 191,
+    "mean_confidence_correct": 100.0,
+    "mean_confidence_wrong": 90.82,
+    "min_confidence_correct": 99.55
+  },
+  "grouped_split": {
+    "sequences": 192,
+    "accuracy": 100.0,
+    "correct": 192,
+    "mean_confidence_correct": 100.0,
+    "mean_confidence_wrong": null,
+    "min_confidence_correct": 100.0
+  },
+  "inflation_points": -0.52,
+  "confusions": {}
+}

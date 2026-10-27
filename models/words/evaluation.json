@@ -1,0 +1,48 @@
+{
+  "protocol": "5 signer-disjoint folds",
+  "glosses": 85,
+  "sequences": 1075,
+  "signers": 65,
+  "feature_dim": 264,
+  "velocity": true,
+  "pretrained": true,
+  "ensemble": 3,
+  "tta_passes": 4,
+  "augment_factor": 4,
+  "folds_ensemble": [
+    0.6139534883720931,
+    0.42790697674418604,
+    0.4418604651162791,
+    0.5348837209302325,
+    0.48372093023255813
+  ],
+  "folds_single": [
+    0.5302325581395348,
+    0.3395348837209302,
+    0.33488372093023255,
+    0.4558139534883721,
+    0.4511627906976744
+  ],
+  "mean": 0.5004651162790698,
+  "std": 0.06788785968565188,
+  "single_mean": 0.42232558139534876,
+  "chance": 0.011764705882352941,
+  "ratio_to_chance": 42.53953488372093,
+  "dropped_glosses": [
+    "blue",
+    "brown",
+    "can",
+    "chair",
+    "city",
+    "clothes",
+    "corn",
+    "eat",
+    "medicine",
+    "need",
+    "pink",
+    "purple",
+    "table",
+    "thursday",
+    "time"
+  ]
+}
