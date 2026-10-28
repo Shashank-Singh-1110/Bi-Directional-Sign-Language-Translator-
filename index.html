@@ -1114,6 +1114,14 @@ $('btnSay').onclick = () => {
 
 const WORDS = new Set(['Hello','Thanks','Yes','I LOVE YOU','No','Sorry']);
 
+// Which of the three classifiers produced the reading. The server decides;
+// this is only how it is named on screen.
+const SOURCE_LABEL = {
+  word:    'word sign',
+  letter:  'letter',
+  gesture: 'gesture',
+};
+
 socket.on('reading', d => {
   if (practising) return;
 
@@ -1130,14 +1138,23 @@ socket.on('reading', d => {
     $('reading').textContent = d.word;
     $('reading').classList.remove('idle');
     $('meterFill').style.width = d.conf + '%';
-    $('readingMeta').textContent =
-      d.conf.toFixed(1) + '% · ' + (d.still ? 'hand steady' : 'moving');
+    // Which branch answered. Without this the only clue was the threshold
+    // number, and a gesture-model answer was indistinguishable from a word
+    // one — which is how "tall" reading as "Hello" went unnoticed.
+    $('readingMeta').textContent = [
+      d.conf.toFixed(1) + '%',
+      SOURCE_LABEL[d.source] || d.source,
+      d.still ? 'hand steady' : 'moving',
+    ].filter(Boolean).join(' · ');
 
     // Gates, in the order the server applies them.
     setGate('g2', d.still, d.still ? 'Steady' : 'Moving');
 
-    const need = WORDS.has(d.word) ? 75 : 92;
-    setGate('g3', d.conf >= need, `${d.conf.toFixed(0)} of ${need}`);
+    // The server owns the thresholds; it sends the one it actually used.
+    // This used to be re-derived here as "75 or 92", which had no value
+    // for the word branch and silently disagreed with the server.
+    const need = (typeof d.threshold === 'number') ? d.threshold : 92;
+    setGate('g3', d.conf >= need, `${d.conf.toFixed(0)} of ${need.toFixed(0)}`);
 
     const top = d.top3 || [];
     const gap = top.length > 1 ? top[0][1] - top[1][1] : 0;
@@ -1202,8 +1219,59 @@ socket.on('sign_verified', d => {
 /* ─── Speech to sign ───────────────────────────────── */
 let recorder = null, chunks = [], recording = false, lastSeq = [];
 
-$('btnMic').onclick = async () => {
-  if (recording) return stopRecording();
+// Where transcription happens. The server tells us at connect time; until
+// it does, assume it cannot, because that path works everywhere.
+let sttOnServer = false;
+const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+let recog = null;
+
+$('btnMic').onclick = () =>
+  recording ? stopRecording()
+            : (sttOnServer ? recordForServer() : listenInBrowser());
+
+// Browser-side recognition. The deployed server has no Whisper — it cannot
+// have one, since that would pull torch into an environment CI keeps clear
+// of heavy ML runtimes — so in production this is the only path that works.
+function listenInBrowser(){
+  if (!SpeechRec){
+    $('spMeta').textContent =
+      'This browser has no speech recognition. Type the text instead.';
+    return;
+  }
+
+  recog = new SpeechRec();
+  recog.lang = 'en-US';
+  recog.interimResults = false;
+  recog.maxAlternatives = 1;
+
+  recog.onresult = e => {
+    const text = e.results[0][0].transcript.trim();
+    $('spText').textContent = text;
+    $('spMeta').textContent = 'Web Speech API';
+    // The server still does the text-to-sign mapping; only the audio
+    // stays in the browser.
+    if (text) socket.emit('speech_to_sign', {text});
+    else $('spLabel').textContent = 'Nothing recognised';
+  };
+
+  recog.onerror = e => {
+    $('spMeta').textContent =
+      e.error === 'not-allowed' ? 'Microphone permission denied'
+                                : 'Speech recognition: ' + e.error;
+  };
+
+  recog.onend = () => {
+    recording = false;
+    $('btnMic').textContent = 'Record';
+  };
+
+  recog.start();
+  recording = true;
+  $('btnMic').textContent = 'Stop recording';
+  $('spLabel').textContent = 'Listening';
+}
+
+async function recordForServer(){
 
   try {
     const stream = await navigator.mediaDevices.getUserMedia({audio: true});
@@ -1229,10 +1297,11 @@ $('btnMic').onclick = async () => {
 };
 
 function stopRecording(){
+  if (recog){ recog.stop(); recog = null; }
   if (recorder && recorder.state !== 'inactive') recorder.stop();
   recording = false;
   $('btnMic').textContent = 'Record';
-  $('spLabel').textContent = 'Transcribing';
+  if (sttOnServer) $('spLabel').textContent = 'Transcribing';
 }
 
 $('btnType').onclick = () => {
@@ -1249,6 +1318,16 @@ $('btnReplay').onclick = () => playSequence(lastSeq);
 socket.on('transcribe_status', d => { $('spMeta').textContent = d.msg; });
 
 socket.on('transcribe_result', d => {
+  // The server could not transcribe after all. Stop sending it audio and
+  // retry in the browser, instead of leaving the user at an error.
+  if (d.fallback){
+    sttOnServer = false;
+    $('headMeta').textContent = 'Speech recognition: in your browser';
+    $('spMeta').textContent = 'Server transcription unavailable — press Record again';
+    $('spLabel').textContent = 'Ready';
+    return;
+  }
+
   $('spText').textContent = d.text || '';
   $('spMeta').textContent = d.error
     ? d.error
@@ -1263,9 +1342,11 @@ socket.on('sign_sequence', d => {
 });
 
 socket.on('stt_engine_info', d => {
-  $('headMeta').textContent = d.offline
-    ? `Speech recognition runs on this machine (${d.model})`
-    : `Speech recognition: ${d.model}`;
+  sttOnServer = (d.engine !== 'browser');
+  $('headMeta').textContent = sttOnServer
+    ? `Speech recognition runs on the server (${d.model})`
+    : (SpeechRec ? 'Speech recognition: in your browser'
+                 : 'Speech recognition unavailable — type instead');
 });
 
 function playSequence(seq){

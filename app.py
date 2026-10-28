@@ -23,16 +23,41 @@ from flask_socketio import SocketIO, emit, join_room, leave_room
 
 from signbridge.normalization import canonicalise
 
+# Whether the server can transcribe audio itself.
+#
+# This used to be set by whether signbridge.whisper_stt imported. That module
+# ships in the repository and imports `whisper` lazily, so the flag was True
+# everywhere — including on the deployment, where openai-whisper is not
+# installed and must not be: it pulls in torch, which would break the
+# CI check that keeps heavy ML runtimes out of the deployed environment.
+# The server therefore advertised local transcription it could not perform,
+# and every request failed with "Whisper is not installed".
+#
+# The flag now means what it says: the wrapper, the library, and ffmpeg
+# must all actually be present.
+def _whisper_usable():
+    import importlib.util
+    import shutil
+
+    if importlib.util.find_spec('whisper') is None:
+        print("[STT] openai-whisper not installed — using browser speech")
+        return False
+    if shutil.which('ffmpeg') is None:
+        print("[STT] ffmpeg not on PATH — using browser speech")
+        return False
+    return True
+
+
 try:
     from signbridge.whisper_stt import (
         get_engine_info,
         load_model as load_whisper,
         transcribe_file,
     )
-    WHISPER_AVAILABLE = True
+    WHISPER_AVAILABLE = _whisper_usable()
 except ImportError:
     WHISPER_AVAILABLE = False
-    print("[WARN] whisper_stt not found — browser will fall back to Web Speech")
+    print("[STT] whisper_stt not found — using browser speech")
 
 app = Flask(__name__, static_folder='.', template_folder='.')
 app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'change-me-in-production')
@@ -205,6 +230,21 @@ def is_hand_still(seq):
         return False
     arr = np.array(list(seq)[-MOTION_FRAMES:])
     return np.std(arr, axis=0).mean() < MOTION_THRESH
+
+
+# Movement across the whole window, above which a sign is treated as
+# carrying meaning in motion rather than being a held handshape. Measured
+# over the hand-shape values only, since the location block moves whenever
+# the signer shifts in their seat.
+WINDOW_MOTION_THRESH = 0.035
+
+
+def window_motion(seq):
+    """How much the hand shape changed across the whole 30-frame window."""
+    if len(seq) < SEQUENCE_LENGTH:
+        return 0.0
+    arr = np.array(list(seq))[-SEQUENCE_LENGTH:, :HAND_DIM]
+    return float(np.std(arr, axis=0).mean())
 
 
 def group_letters_inline(buf):
@@ -392,28 +432,58 @@ def process_features(sid, features, hands_seen):
     top3 = [(ACTIONS[i], float(pred[i])) for i in top_idx]
     word, conf = top3[0]
 
-    # Three classifiers, in order of how well each is evidenced.
+    # Three classifiers, ordered by how well each is evidenced on signers
+    # it has never seen.
     #
+    #   words     85 WLASL glosses, 42% across 65 unseen signers.
+    #   letters   24 static handshapes, 92% across 5 unseen signers.
     #   gestures  the six recorded signs, from the original sequence model.
-    #             Trained on one signer's own recordings, so it is reliable
-    #             for that signer and nobody else — but it is this signer.
-    #   words     85 WLASL glosses, 42% on unseen signers. Needs a high bar.
-    #   letters   24 static handshapes, 91% on unseen signers. The default.
+    #             Trained on one signer's own recordings at 0.999 intra-class
+    #             similarity, so it has never been measured on anyone else.
     #
-    # Precedence runs gesture, then word, then letter, each only if it
-    # clears its own threshold. A confident letter beats a hesitant word.
-    if not (word in GESTURE_SIGNS and conf >= GESTURE_THRESH):
-        guess, guess_conf, guess_top3 = predict_word(sequence)
+    # The gesture branch used to run first. Because it only knows six things
+    # and was fitted to near-duplicate recordings, it answers at or near
+    # 100% for anything in the neighbourhood of a template — "tall" came
+    # back as "Hello" at 100% — and nothing downstream ever ran. It is now
+    # asked last: it keeps the six signs it genuinely knows, but it no
+    # longer shadows the 85 glosses.
+    source = None
 
+    # A word sign carries meaning in motion; a letter is a held handshape.
+    # Without this test the word model runs on every still frame and
+    # confidently matches a held hand against some 30-frame sign it half
+    # resembles.
+    moving = window_motion(sequence) >= WINDOW_MOTION_THRESH
+
+    if moving:
+        guess, guess_conf, guess_top3 = predict_word(sequence)
         if guess is not None and guess_conf >= WORD_THRESH:
-            word, conf, top3 = guess, guess_conf, guess_top3
-        else:
-            letter, letter_conf, letter_top3 = predict_letter(sequence)
-            if letter is not None:
-                word, conf, top3 = letter, letter_conf, letter_top3
+            word, conf, top3, source = guess, guess_conf, guess_top3, 'word'
+
+    if source is None and word in GESTURE_SIGNS and conf >= GESTURE_THRESH:
+        # word/conf still hold the gesture model's own top-1 from above.
+        source = 'gesture'
+
+    if source is None:
+        letter, letter_conf, letter_top3 = predict_letter(sequence)
+        if letter is not None:
+            word, conf, top3, source = (
+                letter, letter_conf, letter_top3, 'letter'
+            )
+
+    if source is None:
+        # Nothing cleared its bar. The gesture read stands and will fail
+        # the threshold check below, which emits no detection.
+        source = 'gesture'
 
     gap_ok = (conf - top3[1][1]) >= MIN_CONF_GAP
-    threshold = GESTURE_THRESH if word in GESTURE_SIGNS else LETTER_THRESH
+    # Each classifier is held to its own bar, since their accuracies differ
+    # by more than a factor of two.
+    threshold = {
+        'gesture': GESTURE_THRESH,
+        'word': WORD_THRESH,
+        'letter': LETTER_THRESH,
+    }[source]
 
     track['stability'].append(
         word if (conf >= threshold and gap_ok and still) else ""
@@ -435,6 +505,7 @@ def process_features(sid, features, hands_seen):
             'word': detected,
             'buffer': track['buffer'].copy(),
             'conf': float(round(conf * 100, 1)),
+            'source': source,
         }, to=sid)
 
         eventlet.spawn(run_verification, detected, conf, sid)
@@ -444,6 +515,8 @@ def process_features(sid, features, hands_seen):
         'word': word,
         'conf': float(round(conf * 100, 1)),
         'still': bool(still),
+        'source': source,
+        'threshold': float(round(threshold * 100, 1)),
         'ready': SEQUENCE_LENGTH,
         'top3': [(str(w), float(round(c * 100, 1))) for w, c in top3],
         'buffer': track['buffer'].copy(),
@@ -654,9 +727,12 @@ def transcribe_audio(data):
     sid = request.sid
 
     if not WHISPER_AVAILABLE:
+        # The browser should not have sent audio at all; it was told at
+        # connect time to transcribe locally. Say so explicitly so it can
+        # switch over rather than showing the user a dead end.
         emit('transcribe_result', {
-            'text': '', 'engine': 'unavailable',
-            'error': 'Whisper is not installed on the server',
+            'text': '', 'engine': 'unavailable', 'fallback': True,
+            'error': 'Server cannot transcribe; using browser speech instead',
         })
         return
 
@@ -704,7 +780,8 @@ def transcribe_audio(data):
         except Exception as e:
             print(f"[WHISPER] {e}")
             socketio.emit('transcribe_result',
-                          {'text': '', 'engine': 'failed', 'error': str(e)},
+                          {'text': '', 'engine': 'failed', 'fallback': True,
+                           'error': str(e)},
                           to=client_id)
         finally:
             if path and os.path.exists(path):
@@ -921,13 +998,18 @@ def startup():
     print("[INIT] Loading model and MediaPipe")
     load_ml()
 
+    global WHISPER_AVAILABLE
     if WHISPER_AVAILABLE:
         print("[INIT] Loading Whisper")
         try:
             load_whisper()
             print("[INIT] Whisper ready — speech stays on this machine")
         except Exception as e:
-            print(f"[INIT] Whisper failed: {e}")
+            # A model that will not load is the same as no model, as far as
+            # the browser is concerned. Say so now rather than failing on
+            # every request afterwards.
+            WHISPER_AVAILABLE = False
+            print(f"[INIT] Whisper failed to load ({e}) — using browser speech")
 
     print(f"[READY] http://localhost:{PORT}")
     print(f"[READY] On this network: http://{lan_address()}")
