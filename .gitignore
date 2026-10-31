@@ -43,3 +43,5 @@ android/app/src/main/assets/*.tflite
 # Debug artefacts
 android_vector.txt
 requirements-old-backup.txt
+!models/tflite/letters_fp16.tflite
+!models/tflite/words_fp16.tflite

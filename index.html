@@ -1117,9 +1117,10 @@ const WORDS = new Set(['Hello','Thanks','Yes','I LOVE YOU','No','Sorry']);
 // Which of the three classifiers produced the reading. The server decides;
 // this is only how it is named on screen.
 const SOURCE_LABEL = {
-  word:    'word sign',
-  letter:  'letter',
-  gesture: 'gesture',
+  word:       'word sign',
+  letter:     'letter',
+  gesture:    'gesture',
+  unresolved: 'no branch matched',
 };
 
 socket.on('reading', d => {
